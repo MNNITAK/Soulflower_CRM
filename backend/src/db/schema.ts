@@ -108,24 +108,3 @@ export async function introspect(force = false): Promise<SchemaInfo> {
 
   return cached;
 }
-
-/**
- * SQL fragment that yields a real DATE from the `date1` column, based on the
- * detected strategy. All report queries use this so the date interpretation
- * lives in exactly one place.
- */
-export function dateExpr(strategy: Date1Strategy): string {
-  switch (strategy) {
-    case "NATIVE_DATE":
-      return `CAST(${DATE_COLUMN} AS date)`;
-    case "EXCEL_SERIAL":
-      // Excel's day 0 is 1899-12-30 (accounts for the 1900 leap-year bug).
-      return `CAST(DATEADD(day, ${DATE_COLUMN}, '1899-12-30') AS date)`;
-    case "STRING_DATE":
-      return `TRY_CONVERT(date, ${DATE_COLUMN})`;
-  }
-}
-
-export async function getStrategy(): Promise<Date1Strategy> {
-  return (await introspect()).date1Strategy;
-}
