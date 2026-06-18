@@ -5,17 +5,24 @@ import express, {
 } from "express";
 import cors from "cors";
 import { config } from "./config.js";
-import { reportsRouter } from "./routes/reports.js";
-import { metaRouter } from "./routes/meta.js";
 import { introspect } from "./db/schema.js";
+import { dailyRouter } from "./modules/daily/daily.routes.js";
+import { skuRouter } from "./modules/sku/sku.routes.js";
+import { cityRouter } from "./modules/city/city.routes.js";
+import { metaRouter } from "./modules/meta/meta.routes.js";
 
 const app = express();
 
 app.use(cors({ origin: config.CORS_ORIGIN }));
 app.use(express.json());
 
+// meta endpoints: /api/health, /api/schema, /api/platforms
 app.use("/api", metaRouter);
-app.use("/api/reports", reportsRouter);
+
+// report modules
+app.use("/api/reports/daily", dailyRouter);
+app.use("/api/reports/sku", skuRouter);
+app.use("/api/reports/city", cityRouter);
 
 app.get("/", (_req, res) => {
   res.json({
@@ -23,9 +30,10 @@ app.get("/", (_req, res) => {
     endpoints: [
       "/api/health",
       "/api/schema",
-      "/api/reports/daily?month=YYYY-MM",
-      "/api/reports/sku?month=YYYY-MM",
-      "/api/reports/city?month=YYYY-MM",
+      "/api/platforms",
+      "/api/reports/daily?month=YYYY-MM&platform=blinkit",
+      "/api/reports/sku?month=YYYY-MM&platform=blinkit",
+      "/api/reports/city?month=YYYY-MM&platform=blinkit",
     ],
   });
 });
@@ -39,7 +47,6 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
 
 app.listen(config.PORT, () => {
   console.log(`[server] listening on http://localhost:${config.PORT}`);
-  // Warm up the schema introspection (and surface DB problems early).
   introspect().catch((err) => {
     console.error(
       "[startup] Could not introspect dbo.raw_sales yet:",
