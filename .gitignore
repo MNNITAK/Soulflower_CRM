@@ -1,0 +1,18 @@
+node_modules/
+dist/
+.next/
+out/
+build/
+
+# env / secrets
+.env
+.env.local
+*.local
+
+# logs
+*.log
+npm-debug.log*
+
+# os
+.DS_Store
+Thumbs.db
